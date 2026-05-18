@@ -18,33 +18,35 @@ namespace SqlHelps.Web.Services
 
         public async Task SendEmailAsync(string to, string subject, string body)
         {
-            // In a real production environment, you would use a service like SendGrid, Mailgun, or a configured SMTP server.
-            // For this implementation, we will log the email and provide the structure for SMTP.
+            _logger.LogInformation("Attempting to send email to {To} with subject {Subject}", to, subject);
             
-            _logger.LogInformation("Sending email to {To} with subject {Subject}", to, subject);
-            
-            /* 
-            // Real SMTP Implementation Example:
-            using var client = new System.Net.Mail.SmtpClient(_configuration["Email:SmtpServer"])
+            try
             {
-                Port = int.Parse(_configuration["Email:Port"]),
-                Credentials = new System.Net.NetworkCredential(_configuration["Email:Username"], _configuration["Email:Password"]),
-                EnableSsl = true,
-            };
+                using var client = new System.Net.Mail.SmtpClient(_configuration["Email:SmtpServer"])
+                {
+                    Port = int.Parse(_configuration["Email:Port"] ?? "587"),
+                    Credentials = new System.Net.NetworkCredential(_configuration["Email:Username"], _configuration["Email:Password"]),
+                    EnableSsl = true,
+                };
 
-            var mailMessage = new System.Net.Mail.MailMessage
+                var mailMessage = new System.Net.Mail.MailMessage
+                {
+                    From = new System.Net.Mail.MailAddress(_configuration["Email:FromAddress"] ?? "noreply@sqlhelps.com", "SQLHelps Website"),
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = true,
+                };
+                mailMessage.To.Add(to);
+
+                await client.SendMailAsync(mailMessage);
+                _logger.LogInformation("Email sent successfully to {To}", to);
+            }
+            catch (Exception ex)
             {
-                From = new System.Net.Mail.MailAddress(_configuration["Email:FromAddress"]),
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = true,
-            };
-            mailMessage.To.Add(to);
-
-            await client.SendMailAsync(mailMessage);
-            */
-
-            await Task.CompletedTask;
+                _logger.LogError(ex, "Failed to send email to {To}. Ensure SMTP settings are configured in appsettings.json.", to);
+                // We rethrow to ensure the Controller handles the failure and shows an error to the user
+                throw;
+            }
         }
     }
 }
