@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqlhelps-web
+  namespace: sqlhelps
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sqlhelps-web
+  template:
+    metadata:
+      labels:
+        app: sqlhelps-web
+    spec:
+      containers:
+      - name: web
+        image: sqlhelps.azurecr.io/sqlhelps-web:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlhelps-web-svc
+  namespace: sqlhelps
+spec:
+  selector:
+    app: sqlhelps-web
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer

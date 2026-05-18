@@ -1,0 +1,15 @@
+**/*.swp
+**/*.swo
+.DS_Store
+.git
+.gitignore
+.gitmodules
+.bundle
+.env
+.dockerignore
+.vs
+.vscode
+**/bin
+**/obj
+**/out
+**/publish
